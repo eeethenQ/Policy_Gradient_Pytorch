@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import retro
 
 import argparse
+import time
 from tensorboardX import SummaryWriter
 
 import utils
@@ -60,7 +61,6 @@ class ReinforcePolicyGradient():
             return action_index.detach().cpu().numpy()
 
     def update_parameter(self, trajectory):
-        CE_loss = nn.CrossEntropyLoss(reduction='none')
         optimizer = torch.optim.Adam(self.policy_net.parameters(), self.lr, betas=(0.9, 0.99))
         optimizer.zero_grad()
         observation, action_index, reward = zip(*trajectory)
@@ -72,14 +72,23 @@ class ReinforcePolicyGradient():
         if self.algorithm == 'episodic':
             # Get discounted coefficient
             discounted_g = self.get_discount_g(reward, gamma = self.gamma)
+            gamma_series = np.empty((discounted_g.shape))
+            gamma_series[0] = 1
+            gamma_series[1:] = self.gamma
+            gamma_series = torch.from_numpy(np.cumprod(gamma_series))
+            discounted_g = discounted_g * gamma_series
         elif self.algorithm == 'continuing':
-            discounted_g = self.get_discount_g(reward, gamma = 1)
+            discounted_g = self.get_discount_g(reward, gamma = self.gamma)
+        else:
+            raise ValueError("Wrong input")
 
         predict_action_index = self.policy_net(observation) 
-        loss = [CE_loss(predict_action_index, action_index[:,i]) for i in range(action_index.shape[1])]
-        loss = torch.stack(loss)
-
-        loss = -discounted_g * loss
+        prob = torch.stack([torch.ones((predict_action_index.shape)) / 3 * 2 - predict_action_index, predict_action_index], dim=-1)
+        prob = F.relu(prob)
+        m = torch.distributions.categorical.Categorical(prob)
+        loss = m.log_prob(action_index)
+        loss = torch.sum(loss, dim=1)
+        loss = - loss * discounted_g 
         loss = torch.sum(loss)
         loss.backward()
         optimizer.step()
@@ -105,8 +114,8 @@ def collect_trajectory(env, agent, epsilon, render):
     while True:
         action_index = agent.get_action_index(observation, epsilon)
         # print(action_index)
-        action_index[action_index > 0.5] = 1
-        action_index[action_index <= 0.5] = 0
+        action_index[action_index > 1/3] = 1
+        action_index[action_index <= 1/3] = 0
         action = np.zeros((12, )).astype(int)
         action[0], action[6], action[7] = list(action_index.squeeze())
         
@@ -114,10 +123,10 @@ def collect_trajectory(env, agent, epsilon, render):
         trajectory.append((observation, action_index, reward))
         observation = utils.get_observation(new_observation)
 
-        if render == False:
+        if render:
             env.render()
         if done:
-            return trajectory
+            return trajectory, new_observation
         
 
 if __name__ == "__main__":
@@ -127,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--algorithm', type=str, help='episodic task / continuing task', default='episodic')
     parser.add_argument('-e', '--episode', type=int, help='number of episode you want to train', default=50)
     parser.add_argument('-g', '--gamma', type=float, help='discount coefficient', default = 0.95)
-    parser.add_argument('-r', '--render', type=bool, help='whether or not to render the game scene', default=True)
+    parser.add_argument('-r', '--render', type=bool, help='whether or not to render the game scene', default=False)
     parser.add_argument('-l', '--lr', type=float, help='Learning rate', default=1e-3)
     parser.add_argument('-ep', '--epsilon', type=float, help='action selection random factor',default=1)
     parser.add_argument('-ed', '--epsilondecay', type=float, help='epsilon decay', default=0.95)
@@ -145,12 +154,12 @@ if __name__ == "__main__":
     algo = args['algorithm']
     agent = ReinforcePolicyGradient(algo, LR, GAMMA)
     env = retro.make(game='Airstriker-Genesis', state=retro.State.DEFAULT)
-    writer = SummaryWriter('log')
+    writer = SummaryWriter('log/log_{}'.format(time.time()))
 
     for i in range(EPISODE):
         
         # Collect trajectory
-        trajectory = collect_trajectory(env, agent, EPSILON, RENDER)
+        trajectory, _ = collect_trajectory(env, agent, EPSILON, RENDER)
 
         # Updating Models parameter
         loss, reward = agent.update_parameter(trajectory)
@@ -163,8 +172,7 @@ if __name__ == "__main__":
         if EPSILON > 0.01:
             EPSILON *= EPSILON_DECAY
     # Termination
-    trajectory = collect_trajectory(env, agent, EPSILON, False)
-    final_state = trajectory[-1][0] # observation
+    _, final_state = collect_trajectory(env, agent, EPSILON, True)
     utils.save_screenshot(final_state)
     agent.save('./parameters.pkl')
     writer.close()
