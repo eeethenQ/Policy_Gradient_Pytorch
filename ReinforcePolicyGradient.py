@@ -72,10 +72,14 @@ class ReinforcePolicyGradient():
         if self.algorithm == 'episodic':
             # Get discounted coefficient
             discounted_g = self.get_discount_g(reward, gamma = self.gamma)
-            gamma_series = np.empty((discounted_g.shape))
+
+            # Modified version of discounted factor
+            gamma_series = np.empty((discounted_g.shape[0] // 20))
             gamma_series[0] = 1
             gamma_series[1:] = self.gamma
-            gamma_series = torch.from_numpy(np.cumprod(gamma_series))
+            gamma_series = np.repeat(np.cumprod(gamma_series), 20)
+            gamma_series = np.pad(gamma_series, (0, discounted_g.shape[0]%20), constant_values=(0,0))
+            gamma_series = torch.from_numpy(gamma_series)
             discounted_g = discounted_g * gamma_series
         elif self.algorithm == 'continuing':
             discounted_g = self.get_discount_g(reward, gamma = self.gamma)

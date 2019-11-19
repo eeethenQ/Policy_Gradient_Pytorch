@@ -14,3 +14,10 @@ Things to do
 # Monte Carlo Policy Gradient
 
 Gonna talk about it later
+https://leimao.github.io/article/REINFORCE-Policy-Gradient/
+
+http://incompleteideas.net/book/RLbook2018.pdf
+
+# Add based line to REINFORCE
+
+https://danieltakeshi.github.io/2017/03/28/going-deeper-into-reinforcement-learning-fundamentals-of-policy-gradients/
