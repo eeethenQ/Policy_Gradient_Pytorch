@@ -12,9 +12,9 @@ from tensorboardX import SummaryWriter
 
 import utils
 
-class PolicyEstimate(nn.Module):
+class Net(nn.Module):
     def __init__(self, h, w, outputs):
-        super(PolicyEstimate, self).__init__()
+        super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
         self.bn1 = nn.BatchNorm2d(16)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
@@ -41,35 +41,9 @@ class PolicyEstimate(nn.Module):
         return x
 
 
-class ValueEstimate(nn.Module):
-    def __init__(self, h, w, outputs):
-        super(ValueEstimate, self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
-        self.bn1 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-        self.bn2 = nn.BatchNorm2d(32)
-        
-        # Number of Linear input connections depends on output of conv2d layers
-        # and therefore the input image size, so compute it.
-        def conv2d_size_out(size, kernel_size = 5, stride = 2):
-            return (size - (kernel_size - 1) - 1) // stride  + 1
-        convh = (conv2d_size_out(conv2d_size_out(h)))
-        convw = (conv2d_size_out(conv2d_size_out(w)))
-        linear_input_size = convw * convh * 32
-        self.head = nn.Linear(linear_input_size, outputs)
-
-    def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = self.head(x.view(x.size(0), -1))
-        return x
-    
-
-
 class ReinforcePolicyGradient():
     def __init__(self, algorithm, lr, gamma):
-        self.policy_net = PolicyEstimate(20, 20, 3)
-        self.value_net = ValueEstimate(20, 20, 1)
+        self.policy_net = Net(20, 20, 3)
         
         self.algorithm = algorithm
         self.lr = lr
@@ -87,11 +61,8 @@ class ReinforcePolicyGradient():
             return action_index.detach().cpu().numpy()
 
     def update_parameter(self, trajectory):
-        optimizer_p = torch.optim.Adam(self.policy_net.parameters(), self.lr, betas=(0.9, 0.99))
-        optimizer_p.zero_grad()
-        optimizer_v = torch.optim.Adam(self.value_net.parameters(), self.lr, betas=(0.9, 0.99))
-        optimizer_v.zero_grad()
-
+        optimizer = torch.optim.Adam(self.policy_net.parameters(), self.lr, betas=(0.9, 0.99))
+        optimizer.zero_grad()
         observation, action_index, reward = zip(*trajectory)
         # print(torch.cat(observation, dim=0).shape, type(observation), observation[0].shape)
         observation = torch.cat(observation, dim=0)
@@ -100,32 +71,33 @@ class ReinforcePolicyGradient():
 
         if self.algorithm == 'episodic':
             # Get discounted coefficient
-            discounted_g = self.get_discount_g_episodic(_reward, gamma = self.gamma)
+            discounted_g = self.get_discount_g(reward, gamma = self.gamma)
+
+            # Modified version of discounted factor
+            # gamma_series = np.empty((discounted_g.shape[0] // 20))
+            # gamma_series[0] = 1
+            # gamma_series[1:] = self.gamma
+            # gamma_series = np.repeat(np.cumprod(gamma_series), 20)
+            # gamma_series = np.pad(gamma_series, (0, discounted_g.shape[0]%20), constant_values=(0,0))
+            # gamma_series = torch.from_numpy(gamma_series)
+            discounted_g = self.get_discount_g_episodic(reward, self.gamma)
         elif self.algorithm == 'continuing':
             discounted_g = self.get_discount_g_continuing(reward, gamma = self.gamma)
         else:
             raise ValueError("Wrong input")
 
-        # value estimate: minimize difference between baseline and expected reward
-        baseline = self.value_net(observation)
-        # print(baseline.shape, loss.shape)
-        advantage = torch.sum((discounted_g- baseline.squeeze()) ** 2)
-
-        # policy estimate: minimize the -loss * advantage
         predict_action_index = self.policy_net(observation) 
         prob = torch.stack([torch.ones((predict_action_index.shape)) - predict_action_index, predict_action_index], dim=-1)
         prob = F.relu(prob)
         m = torch.distributions.categorical.Categorical(prob)
         loss = m.log_prob(action_index)
         loss = torch.sum(loss, dim=1)
-        loss = torch.mean(- loss * advantage)
-        
-        loss = loss + advantage
+        loss = - loss * discounted_g 
+        loss = torch.sum(loss)
         loss.backward()
-        optimizer_p.step()
-        optimizer_v.step()
+        optimizer.step()
 
-        return torch.sum(loss), torch.sum(baseline), advantage, torch.sum(reward)
+        return loss, torch.sum(reward)
 
     def get_discount_g_continuing(self, reward, gamma):
         g_value = [0]
@@ -136,6 +108,7 @@ class ReinforcePolicyGradient():
 
     def get_discount_g_episodic(self, reward, gamma):
         return 0
+
 
     def save(self, filename='./parameter.pkl'):
         torch.save(self.policy_net.state_dict(), filename)
@@ -167,7 +140,7 @@ if __name__ == "__main__":
 
     # Initialization
     parser = argparse.ArgumentParser(description='Reinforce Policy Gradient (Monte Carlo)')
-    parser.add_argument('-a', '--algorithm', type=str, help='episodic task / continuing task', default='continuing')
+    parser.add_argument('-a', '--algorithm', type=str, help='episodic task / continuing task', default='episodic')
     parser.add_argument('-e', '--episode', type=int, help='number of episode you want to train', default=50)
     parser.add_argument('-g', '--gamma', type=float, help='discount coefficient', default = 0.95)
     parser.add_argument('-r', '--render', type=bool, help='whether or not to render the game scene', default=False)
@@ -188,7 +161,7 @@ if __name__ == "__main__":
     algo = args['algorithm']
     agent = ReinforcePolicyGradient(algo, LR, GAMMA)
     env = retro.make(game='Airstriker-Genesis', state=retro.State.DEFAULT)
-    writer = SummaryWriter('log_baseline/log_{}'.format(time.time()))
+    writer = SummaryWriter('log/log_{}'.format(time.time()))
 
     for i in range(EPISODE):
         
@@ -196,14 +169,12 @@ if __name__ == "__main__":
         trajectory, _ = collect_trajectory(env, agent, EPSILON, RENDER)
 
         # Updating Models parameter
-        loss, baseline, advantage, reward = agent.update_parameter(trajectory)
+        loss, reward = agent.update_parameter(trajectory)
 
         # Logging
         writer.add_scalar('loss', loss.data, i)
-        writer.add_scalar('baseline', baseline.data, i)
-        writer.add_scalar('advantage', advantage.data, i)
         writer.add_scalar('reward', reward.data, i)
-        print("Episode : {}, the loss is {}, the baseline is {}, the advantage is {}, the reward is {}".format(i, loss.data, baseline.data, advantage.data, reward.data))
+        print("Episode : {}, the loss is {}, the reward is {}".format(i, loss.data, reward.data))
 
         if EPSILON > 0.01:
             EPSILON *= EPSILON_DECAY

@@ -10,6 +10,8 @@ transform = torchvision.transforms.Compose([
             torchvision.transforms.ToTensor()
         ])
 
+
+
 def save_screenshot(observation):
     print("Saving to ./final_screenshot.png")
     plt.imsave("final_screenshot.png", observation)

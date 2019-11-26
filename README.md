@@ -13,7 +13,7 @@ Things to do
 
 # Monte Carlo Policy Gradient
 
-Gonna talk about it later
+The correctness still need to be verified.
 https://leimao.github.io/article/REINFORCE-Policy-Gradient/
 
 http://incompleteideas.net/book/RLbook2018.pdf
