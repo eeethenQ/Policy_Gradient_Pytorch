@@ -87,7 +87,7 @@ class ReinforcePolicyGradient():
             raise ValueError("Wrong input")
 
         predict_action_index = self.policy_net(observation) 
-        prob = torch.stack([torch.ones((predict_action_index.shape)) / 3 * 2 - predict_action_index, predict_action_index], dim=-1)
+        prob = torch.stack([torch.ones((predict_action_index.shape))- predict_action_index, predict_action_index], dim=-1)
         prob = F.relu(prob)
         m = torch.distributions.categorical.Categorical(prob)
         loss = m.log_prob(action_index)

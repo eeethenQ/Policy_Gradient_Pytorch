@@ -1,4 +1,4 @@
-# Introduction
+# 1. Introduction
 
 This repository is used as the implementations of policy gradient algorithms. 
 
@@ -11,13 +11,26 @@ Things to do
 1. A3C
 1. A2C
 
-# Monte Carlo Policy Gradient
+# Implementation
 
-The correctness still need to be verified.
-https://leimao.github.io/article/REINFORCE-Policy-Gradient/
+## 2. Monte Carlo Policy Gradient
 
-http://incompleteideas.net/book/RLbook2018.pdf
+For REINFORCE, following files are implemented
+1. `Reinforce_CartPole.py`: Implement the REINFORCE for game `CartPole-v0`. 
 
-# Add based line to REINFORCE
+### 2.1. REINFORCE CartPole
+To start the training, the simplest way is to run `python Reinforce_CartPole.py`
 
-https://danieltakeshi.github.io/2017/03/28/going-deeper-into-reinforcement-learning-fundamentals-of-policy-gradients/
+Type `python Reinforce_CartPole.py --help` to see other options of training.
+
+This is the result running in my machine after 20000 epoch. The orange line is using directly the 4-dim observation (see [here](https://github.com/openai/gym/wiki/CartPole-v0)).
+
+the blue line is using pixel value observation. Have tried different cropping technique(like cutting most of the blank area ), still not performing very well. Maybe try other algorithms
+
+![REINFORCE_CART](./img/REINFORCE_CART.png)
+
+## 3. Add based line to REINFORCE
+
+# 4. Reference
+[Reinforce Learning Book](http://incompleteideas.net/book/RLbook2018.pdf
+)
