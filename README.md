@@ -6,7 +6,6 @@ The reference link is [here](https://lilianweng.github.io/lil-log/2018/04/08/pol
 
 Things to do 
 
-1. Actor-Critic
 1. Off-policy Policy Gradient
 1. A3C
 1. A2C
@@ -64,7 +63,7 @@ BTW, the difference of episodic update and continuing update is
 
 ## 2.2. Actor-Critic
 
-### Training
+### 2.2.1. Training
 
 To start the training, the simplest way is to run `python AC_CartPole.py`
 
@@ -72,10 +71,10 @@ Type `python AC_CartPole.py --help` to see other options of training.
 
 For reference only, mine is `python AC_CartPole.py -e 2000 --info ac_cart`.
 
-### Result
-![AC_RESULT](./img/AC_CART.png)
+### 2.2.2. Result
+![AC_RESULT](./img/AC_CART.PNG)
 
-### Discussion
+### 2.2.3. Discussion
 
 * Significantly faster than REINFORCE, take around 400 epochs to get satifying result. In comparison, baseline reinforce takes 7k epochs.
 
