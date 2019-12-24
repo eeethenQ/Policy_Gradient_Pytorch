@@ -19,19 +19,22 @@ For REINFORCE, following files are implemented
 1. `Reinforce_CartPole.py`: Implement the REINFORCE for game `CartPole-v0`. 
 1. `Baseline_CartPole.py`: Implement the baseline REINFORCE for game `CartPole-v0`.
 
-The observation used in `CartPole-v0` is 4-dim observation (see [here](https://github.com/openai/gym/wiki/CartPole-v0)) and pixel-value observation.
+The observation used in `CartPole-v0` is 4-dim observation (see [here](https://github.com/openai/gym/wiki/CartPole-v0)).
 
 ### 2.1.1. REINFORCE CartPole
 To start the training, the simplest way is to run `python Reinforce_CartPole.py`
 
 Type `python Reinforce_CartPole.py --help` to see other options of training.
 
+For reference only, mine is `python Reinforce_CartPole.py -e 20000 -a [continuing/episodic] --info rein_cart`.
 
 ### 2.1.2. Add baseline to REINFORCE
 
 To start the training, the simplest way is to run `python Baseline_CartPole.py`
 
 Type `python Baseline_CartPole.py --help` to see other options of training.
+
+For reference only, mine is `python Baseline_CartPole.py -e 20000 -a [continuing/episodic] --info base_cart`.
 
 ### 2.1.3. Result
 
@@ -50,13 +53,31 @@ Considering the fact that the CartPole is a continuing tasks without the episode
 
 BTW, the difference of episodic update and continuing update is
 
-* Episodic: ![](http://latex.codecogs.com/gif.latex?\mathbf{\theta}\leftarrow\mathbf{\theta}+\alpha\gamma^t(\sum_{k=t+1}^{T}\gamma^{k-t-1}r_k)\nabla\ln\pi(A_t|S_t,\mathbf{\theta}))
-* Continuing: ![](http://latex.codecogs.com/gif.latex?\mathbf{\theta}\leftarrow\mathbf{\theta}+\alpha(\sum_{k=t+1}^{T}\gamma^{k-t-1}r_k)\nabla\ln\pi(A_t|S_t,\mathbf{\theta}))
+* Episodic: 
+
+![](http://latex.codecogs.com/gif.latex?\mathbf{\theta}\leftarrow\mathbf{\theta}+\alpha\gamma^t(\sum_{k=t+1}^{T}\gamma^{k-t-1}r_k)\nabla\ln\pi(A_t|S_t,\mathbf{\theta}))
+
+* Continuing: 
+
+![](http://latex.codecogs.com/gif.latex?\mathbf{\theta}\leftarrow\mathbf{\theta}+\alpha(\sum_{k=t+1}^{T}\gamma^{k-t-1}r_k)\nabla\ln\pi(A_t|S_t,\mathbf{\theta}))
 
 
 ## 2.2. Actor-Critic
 
+### Training
 
+To start the training, the simplest way is to run `python AC_CartPole.py`
+
+Type `python AC_CartPole.py --help` to see other options of training.
+
+For reference only, mine is `python AC_CartPole.py -e 2000 --info ac_cart`.
+
+### Result
+![AC_RESULT](./img/AC_CART.png)
+
+### Discussion
+
+* Significantly faster than REINFORCE, take around 400 epochs to get satifying result. In comparison, baseline reinforce takes 7k epochs.
 
 
 # 3. Reference

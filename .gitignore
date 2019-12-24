@@ -3,4 +3,5 @@ log/
 __pycache__/
 *.ipynb
 *.pkl
-tmp*
+tmp.py
+tmp/
