@@ -11,26 +11,58 @@ Things to do
 1. A3C
 1. A2C
 
-# Implementation
+# 2. Implementation
 
-## 2. Monte Carlo Policy Gradient
+## 2.1. Monte Carlo Policy Gradient
 
 For REINFORCE, following files are implemented
 1. `Reinforce_CartPole.py`: Implement the REINFORCE for game `CartPole-v0`. 
+1. `Baseline_CartPole.py`: Implement the baseline REINFORCE for game `CartPole-v0`.
 
-### 2.1. REINFORCE CartPole
+The observation used in `CartPole-v0` is 4-dim observation (see [here](https://github.com/openai/gym/wiki/CartPole-v0)) and pixel-value observation.
+
+### 2.1.1. REINFORCE CartPole
 To start the training, the simplest way is to run `python Reinforce_CartPole.py`
 
 Type `python Reinforce_CartPole.py --help` to see other options of training.
 
-This is the result running in my machine after 20000 epoch. The orange line is using directly the 4-dim observation (see [here](https://github.com/openai/gym/wiki/CartPole-v0)).
 
-the blue line is using pixel value observation. Have tried different cropping technique(like cutting most of the blank area ), still not performing very well. Maybe try other algorithms
+### 2.1.2. Add baseline to REINFORCE
 
-![REINFORCE_CART](./img/REINFORCE_CART.png)
+To start the training, the simplest way is to run `python Baseline_CartPole.py`
 
-## 3. Add based line to REINFORCE
+Type `python Baseline_CartPole.py --help` to see other options of training.
 
-# 4. Reference
+### 2.1.3. Result
+
+* Red line: Baseline REINFORCE & Continuing Update
+* Green line: Baseline REINFORCE & Episodic Update
+* Blue line: REINFORCE & Continuing Update
+* Orange line: REINFORCE & Episodic Update
+
+![REINFORCE_RESULT](./img/REINFORCE_CART.png)
+
+### 2.1.4. Discussion
+
+Basically, the only difference between REINFORCE and baseline REINFORCE is to subtract the mean value from discounted reward summation. However, with this minor modification, the result has a significant improvement. Another way of using baseline is to use another state-value function to estimate the baseline (see [here](http://incompleteideas.net/book/RLbook2018.pdf) Page 330) 
+
+Considering the fact that the CartPole is a continuing tasks without the episodes, the result also shows that the when using episodic Update and continuing Update, the one trained with continuing Update strongly outperformed the other one.
+
+BTW, the difference of episodic update and continuing update is
+
+* Episodic: $\mathbf{\theta} \leftarrow \mathbf{\theta} + \alpha \gamma^t (\sum_{k=t+1}^{T} \gamma^{k-t-1}r_k) \nabla \ln \pi(A_t|S_t, \mathbf{\theta})$
+* Continuing: $\mathbf{\theta} \leftarrow \mathbf{\theta} + \alpha (\sum_{k=t+1}^{T} \gamma^{k-t-1}r_k) \nabla \ln \pi(A_t|S_t, \mathbf{\theta})$
+
+
+## 2.2. Actor-Critic
+
+
+
+
+# 3. Reference
 [Reinforce Learning Book](http://incompleteideas.net/book/RLbook2018.pdf
 )
+
+<script type="text/javascript" async
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>

@@ -2,6 +2,7 @@ import numpy as np
 import torchvision
 import torch
 import matplotlib.pyplot as plt
+import datetime
 
 
 transform = torchvision.transforms.Compose([
@@ -60,3 +61,5 @@ def get_observation_for_pixel_cartpole(env):
     return transform(obs).unsqueeze(0).to(device)
 
     
+def get_date():
+    return str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))

@@ -90,8 +90,9 @@ class ReinforcePolicyGradient():
             discounted_g = self.get_discount_g_continuing(reward, gamma = self.gamma)
         else:
             raise ValueError("Wrong input")
-        
-        # discounted_g = (discounted_g - torch.mean(discounted_g)) / torch.std(discounted_g)
+
+        # Add Baseline
+        discounted_g = (discounted_g - torch.mean(discounted_g)) / torch.std(discounted_g)
 
         for i in range(reward.shape[0]):
             prob = self.policy_net(observation[i].unsqueeze(0))

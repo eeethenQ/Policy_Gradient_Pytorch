@@ -1,5 +1,4 @@
-log*/
-log_baseline/
+log/
 .vscode/
 __pycache__/
 *.ipynb
