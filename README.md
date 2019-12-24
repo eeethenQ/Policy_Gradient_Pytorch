@@ -50,8 +50,8 @@ Considering the fact that the CartPole is a continuing tasks without the episode
 
 BTW, the difference of episodic update and continuing update is
 
-* Episodic: $\mathbf{\theta} \leftarrow \mathbf{\theta} + \alpha \gamma^t (\sum_{k=t+1}^{T} \gamma^{k-t-1}r_k) \nabla \ln \pi(A_t|S_t, \mathbf{\theta})$
-* Continuing: $\mathbf{\theta} \leftarrow \mathbf{\theta} + \alpha (\sum_{k=t+1}^{T} \gamma^{k-t-1}r_k) \nabla \ln \pi(A_t|S_t, \mathbf{\theta})$
+* Episodic: ![](http://latex.codecogs.com/gif.latex?\mathbf{\theta}\leftarrow\mathbf{\theta}+\alpha\gamma^t(\sum_{k=t+1}^{T}\gamma^{k-t-1}r_k)\nabla\ln\pi(A_t|S_t,\mathbf{\theta}))
+* Continuing: ![](http://latex.codecogs.com/gif.latex?\mathbf{\theta}\leftarrow\mathbf{\theta}+\alpha(\sum_{k=t+1}^{T}\gamma^{k-t-1}r_k)\nabla\ln\pi(A_t|S_t,\mathbf{\theta}))
 
 
 ## 2.2. Actor-Critic
@@ -62,7 +62,3 @@ BTW, the difference of episodic update and continuing update is
 # 3. Reference
 [Reinforce Learning Book](http://incompleteideas.net/book/RLbook2018.pdf
 )
-
-<script type="text/javascript" async
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
-</script>
