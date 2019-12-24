@@ -11,10 +11,42 @@ from tensorboardX import SummaryWriter
 
 import utils
 
+class Net_Pixel(nn.Module):
+    def __init__(self, h, w, outputs):
+        super(Net_Pixel, self).__init__()
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=2)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=2)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(32, 32, kernel_size=3, stride=2)
+        self.bn3 = nn.BatchNorm2d(32)
 
-class PolicyNet_Simple(nn.Module):
+        self.out_dim = outputs
+
+        # Number of Linear input connections depends on output of conv2d layers
+        # and therefore the input image size, so compute it.
+        def conv2d_size_out(size, kernel_size = 3, stride = 2):
+            return (size - (kernel_size - 1) - 1) // stride  + 1
+        convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
+        convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
+        # convh = (conv2d_size_out(conv2d_size_out(h)))
+        # convw = (conv2d_size_out(conv2d_size_out(w)))
+        linear_input_size = convw * convh * 32
+        self.head = nn.Linear(linear_input_size, self.out_dim)
+
+    def forward(self, x):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = self.head(x.view(x.size(0), -1))
+        if self.out_dim == 1:
+            return x
+        else:
+            return F.softmax(x, dim=-1)
+
+class Net_Simple(nn.Module):
     def __init__(self, outputs):
-        super(PolicyNet_Simple, self).__init__()
+        super(Net_Simple, self).__init__()
         self.out_dim = outputs
         self.fc1 = nn.Linear(4, 20)
         self.fc2 = nn.Linear(20, 40)
@@ -31,15 +63,20 @@ class PolicyNet_Simple(nn.Module):
         return x
 
 class ActorCritic():
-    def __init__(self, lr, gamma):
-        self.actor_net = PolicyNet_Simple(outputs=2)
-        self.critic_net = PolicyNet_Simple(outputs=1)
+    def __init__(self, lr, gamma, use_pixel):
+        if use_pixel:
+            self.actor_net = Net_Pixel(30, 30, 2)
+            self.critic_net = Net_Pixel(30, 30, 1)
+        else:
+            self.actor_net = Net_Simple(outputs=2)
+            self.critic_net = Net_Simple(outputs=1)
         self.actor_optimizer = torch.optim.Adam(self.actor_net.parameters(), lr, betas=(0.9, 0.99))
         self.critic_optimizer = torch.optim.Adam(self.critic_net.parameters(), lr, betas=(0.9, 0.99))
         self.gamma = gamma
 
 
     def get_action(self, observation):
+        
         probs = self.actor_net(observation)
         state_value = self.critic_net(observation)
 
@@ -91,10 +128,17 @@ class ActorCritic():
 
 
         
-def collect_trajectory_simple(env, agent, render):
-    # Collect the trajectory data using 4 dim observation
-    observation = env.reset()
-    observation = torch.FloatTensor(observation).unsqueeze(0).to(utils.device)
+def collect_trajectory(env, agent, render, use_pixel):
+    
+    if use_pixel:
+        # Collect the trajectory data using pixel value observation
+        env.reset()
+        observation = utils.get_observation_for_pixel_cartpole(env)
+    else:
+        # Collect the trajectory data using 4 dim observation
+        observation = env.reset()
+        observation = torch.FloatTensor(observation).unsqueeze(0)
+    
     action_traj = []
     rewards = []
     while True:
@@ -102,9 +146,13 @@ def collect_trajectory_simple(env, agent, render):
         new_observation, reward, done, _info = env.step(int(action))
         action_traj.append((log_prob, state_value))
         rewards.append(reward)
-        observation = torch.FloatTensor(new_observation).unsqueeze(0)
 
-        if render:
+        if use_pixel:
+            observation = utils.get_observation_for_pixel_cartpole(env)
+        else:
+            observation = torch.FloatTensor(new_observation).unsqueeze(0)
+
+        if render and use_pixel is False:
             env.render('rgb_array')
         if done:
             return action_traj, rewards
@@ -118,7 +166,9 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--lr', type=float, help='Learning rate', default=1e-3)
     parser.add_argument('-r', '--render', dest="RENDER", action='store_true', help='Flag to render when using simple observation')
     parser.add_argument('--info', type=str, help='extra information to label the log', default="")
+    parser.add_argument('-p', '--usepixelvalue', dest='USE_PIXEL', action='store_true', help='Use Pixel Value')
     parser.set_defaults(RENDER=False)
+    parser.set_defaults(USE_PIXEL=False)
     args = vars(parser.parse_args())
 
     # Hyper-parameter setup
@@ -127,16 +177,17 @@ if __name__ == "__main__":
     LR = args['lr']
     RENDER = args['RENDER']
     info = args['info']
+    USE_PIXEL = args['USE_PIXEL']
 
     # Training Setup
-    agent = ActorCritic(LR, GAMMA)
+    agent = ActorCritic(LR, GAMMA, USE_PIXEL)
     game_name = "CartPole-v0"
     env = gym.make(game_name)
     writer = SummaryWriter('log/log_{}_{}_{}'.format(game_name, utils.get_date(), info))
 
     for i in range(EPISODE):
         # Collect trajectory
-        action_traj, reward = collect_trajectory_simple(env, agent, RENDER)
+        action_traj, reward = collect_trajectory(env, agent, RENDER, USE_PIXEL)
 
         # Updating Models parameter
         actor_loss, critic_loss = agent.update_parameter(action_traj, reward)

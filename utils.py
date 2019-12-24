@@ -12,6 +12,7 @@ transform = torchvision.transforms.Compose([
         ])
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cpu')
 
 def save_screenshot(observation):
     print("Saving to ./final_screenshot.png")
@@ -58,7 +59,7 @@ def get_observation_for_pixel_cartpole(env):
     # other misc processing
     obs = np.ascontiguousarray(obs, dtype=np.float32) / 255
     obs = torch.from_numpy(obs)
-    return transform(obs).unsqueeze(0).to(device)
+    return transform(obs).unsqueeze(0)
 
     
 def get_date():
