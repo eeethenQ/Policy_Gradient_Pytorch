@@ -10,6 +10,14 @@ Things to do
 1. A3C
 1. A2C
 
+# Add game 2048 
+CartPole is kind of easy to beat, thus add 2048 for some tests.
+
+The api to use 2048 is `game.update(action)` in which action is UP(1), LEFT(2), DOWN(3), RIGHT(4).
+
+To test, there already is a player who randomly selects action. run it with `python 2048_simplify.py`
+
+
 # 2. Implementation
 
 ## 2.1. Monte Carlo Policy Gradient
@@ -78,7 +86,20 @@ For reference only, mine is `python AC_CartPole.py -e 2000 --info ac_cart`.
 
 * Significantly faster than REINFORCE, take around 400 epochs to get satifying result. In comparison, baseline reinforce takes 7k epochs.
 
+* Have tried pixel value observation, still not working well.
+
+## Off-Policy PG
+
+Need a known, predefined behavior policy, not quite sure how to deal with.
+
+## A3C
+
+Asynchronous Advantage Actor-Critic
+
 
 # 3. Reference
-[Reinforce Learning Book](http://incompleteideas.net/book/RLbook2018.pdf
-)
+[Reinforce Learning Book](http://incompleteideas.net/book/RLbook2018.pdf)
+
+[CS294 DRL UCB](http://rail.eecs.berkeley.edu/deeprlcourse-fa17/)
+
+[Pytorch Tutorial](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html) 
