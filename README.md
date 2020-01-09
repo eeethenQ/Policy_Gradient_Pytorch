@@ -6,7 +6,6 @@ The reference link is [here](https://lilianweng.github.io/lil-log/2018/04/08/pol
 
 Things to do 
 
-1. Off-policy Policy Gradient
 1. A3C
 1. A2C
 
@@ -88,13 +87,12 @@ For reference only, mine is `python AC_CartPole.py -e 2000 --info ac_cart`.
 
 * Have tried pixel value observation, still not working well.
 
-## 3.3. Off-Policy PG
-
-Need a known, predefined behavior policy, not quite sure how to deal with.
 
 ## 3.4. A3C
 
 Asynchronous Advantage Actor-Critic
+
+Workable now, gonna add functionality and more discussion later.
 
 
 # 4. Reference
