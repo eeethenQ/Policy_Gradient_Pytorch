@@ -8,9 +8,7 @@ from network import Net_Simple, Net_Pixel
 
 
 class Worker(Process):
-    def __init__(self, id, gamma, env, global_actor_net, global_critic_net, \
-                global_actor_optim, global_critic_optim, \
-                MAX_EPISODE):
+    def __init__(self, id, gamma, env, global_actor_net, global_critic_net, global_actor_optim, global_critic_optim, global_episode, MAX_EPISODE):
         super(Worker, self).__init__()
         self.local_actor_net = Net_Simple(outputs=2)
         self.local_critic_net = Net_Simple(outputs=1)
@@ -22,6 +20,7 @@ class Worker(Process):
 
         self.gamma = gamma
         self.env = env
+        self.global_episode = global_episode
         self.MAX_EPISODE = MAX_EPISODE
         self.id = id
 
@@ -110,12 +109,13 @@ class Worker(Process):
         self.local_critic_net.load_state_dict(self.global_critic_net.state_dict())
 
     def run(self, ):
-        for i in range(self.MAX_EPISODE):
-            self.sync_global()
+        while self.global_episode.value < self.MAX_EPISODE:
             action_traj, reward = self.collect_trajectory()
-            self.update_global(action_traj, reward)
-            print("Worker: {}, Episode: {}, Reward: {}".format(self.id, i, sum(reward)))
-            
+            with self.global_episode.get_lock():
+                self.global_episode.value += 1
+                self.update_global(action_traj, reward)
+                print("Worker: {}, Episode: {}, Reward: {}".format(self.id, self.global_episode.value, sum(reward)))
+                self.sync_global()
 
 
 
