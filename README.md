@@ -4,11 +4,6 @@ This repository is used as the implementations of policy gradient algorithms.
 
 The reference link is [here](https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html)
 
-Things to do 
-
-1. A3C
-1. A2C
-
 # 2. Add game 2048 
 CartPole is kind of easy to beat, thus add 2048 for some tests.
 
@@ -72,28 +67,52 @@ BTW, the difference of episodic update and continuing update is
 
 ### 3.2.1. Training
 
-To start the training, the simplest way is to run `python AC_CartPole.py`
+To start the training, the simplest way is to run `python A2C_CartPole.py`
 
-Type `python AC_CartPole.py --help` to see other options of training.
+Type `python A2C_CartPole.py --help` to see other options of training.
 
-For reference only, mine is `python AC_CartPole.py -e 2000 --info ac_cart`.
+For reference only, mine is `python A2C_CartPole.py -e 2000 --info ac_cart`.
 
 ### 3.2.2. Result
 ![AC_RESULT](./img/AC_CART.PNG)
 
 ### 3.2.3. Discussion
+* The Actor-Critic Algorithm is a "family of  related techniques which train some critic network that computes value estimate in order to plug into the update as a lower-variance replacement. Thus here the implementation is based on using estimates of advantage function A(s,a) as the "value", which is exactly Advantage Actor-Critic (A2C) does. 
 
 * Significantly faster than REINFORCE, take around 400 epochs to get satifying result. In comparison, baseline reinforce takes 7k epochs.
 
 * Have tried pixel value observation, still not working well.
 
 
-## 3.4. A3C
+## 3.3. A3C
 
 Asynchronous Advantage Actor-Critic
 
-Workable now, gonna add functionality and more discussion later.
+### 3.3.1. Implementation
 
+To start the training, the simplest way is to run `python A3C_CartPole.py`, remember go to the a3c folder.
+
+Type `python A3C_CartPole.py --help` to see other options of training.
+
+For reference only, mine is `python A3C_CartPole.py -e 1000 -l 0.0001`.
+
+### 3.3.2. Result
+Because there are multiple threads, each has its own update procedure. Thus no figure for global result. But in my machine, each thread started to converge when episode was about 350. 
+
+### 3.3.3. Discussion
+* The number of processes is set to 4 in default. It is true that with the increase of number of processes, agent tends to find optimal policy more quickly. I suppose there are two reasons. 1. More prcesses can explore more possibilities of policy. 2. More processes means during the same amount of episodes, the parameters of global network can be updated more times.
+
+* I have not encounted problems like stucking into local optimal point. I would account this for the game itself is easy.
+
+## 3.4. A2C
+
+The implementation is in "Actor-Critic".
+
+### 3.4.1. Discussion
+
+* According to the training result, the A3C and A2C is almost the same to each other, specially when number of process is set to a moderate number like 4 or 5. Probably it is why [openai](https://openai.com/blog/baselines-acktr-a2c/) used A2C as their baseline rather than A3C. 
+
+* The interpretation in [Lil'Log]((https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html)) is probably wrong as far as i think. Basically, the implementation of A2C given by [openai](https://github.com/openai/baselines/tree/master/baselines/a2c) shows no sign of using synchronized multiprocessing or any codes of coordinator. If i am wrong, please feel free to correct me. 
 
 # 4. Reference
 [Reinforce Learning Book](http://incompleteideas.net/book/RLbook2018.pdf)

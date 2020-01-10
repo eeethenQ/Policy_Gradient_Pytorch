@@ -62,7 +62,7 @@ class Net_Simple(nn.Module):
             x = F.softmax(self.fc3(x), dim=-1)
         return x
 
-class ActorCritic():
+class A2CAgent():
     def __init__(self, lr, gamma, use_pixel):
         if use_pixel:
             self.actor_net = Net_Pixel(30, 30, 2)
@@ -102,7 +102,7 @@ class ActorCritic():
             
             actor_loss.append(-log_prob * advantage)
 
-            critic_loss.append(F.smooth_l1_loss(state_value, torch.tensor([R])))
+            critic_loss.append(F.smooth_l1_loss(state_value, torch.tensor([[R]])))
 
         actor_loss = torch.stack(actor_loss).sum()
         critic_loss = torch.stack(critic_loss).sum()
@@ -110,7 +110,7 @@ class ActorCritic():
         actor_loss.backward()
         critic_loss.backward()
 
-        self.actor_optimizer.step()
+        self.actor_optimizer.step() 
         self.critic_optimizer.step()
 
         return actor_loss.data, critic_loss.data
@@ -160,10 +160,10 @@ def collect_trajectory(env, agent, render, use_pixel):
 if __name__ == "__main__":
 
     # Initialization
-    parser = argparse.ArgumentParser(description='Reinforce Policy Gradient (Monte Carlo)')
+    parser = argparse.ArgumentParser(description='A2C Policy Gradient')
     parser.add_argument('-e', '--episode', type=int, help='number of episode you want to train', default=10000)
     parser.add_argument('-g', '--gamma', type=float, help='discount coefficient', default = 0.95)
-    parser.add_argument('-l', '--lr', type=float, help='Learning rate', default=1e-3)
+    parser.add_argument('-l', '--lr', type=float, help='Learning rate', default=1e-4)
     parser.add_argument('-r', '--render', dest="RENDER", action='store_true', help='Flag to render when using simple observation')
     parser.add_argument('--info', type=str, help='extra information to label the log', default="")
     parser.add_argument('-p', '--usepixelvalue', dest='USE_PIXEL', action='store_true', help='Use Pixel Value')
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     USE_PIXEL = args['USE_PIXEL']
 
     # Training Setup
-    agent = ActorCritic(LR, GAMMA, USE_PIXEL)
+    agent = A2CAgent(LR, GAMMA, USE_PIXEL)
     game_name = "CartPole-v0"
     env = gym.make(game_name)
     writer = SummaryWriter('log/log_{}_{}_{}'.format(game_name, utils.get_date(), info))

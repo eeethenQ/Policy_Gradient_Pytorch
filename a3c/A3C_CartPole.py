@@ -2,12 +2,14 @@ import torch
 import gym
 import torch.optim as optim
 import torch.multiprocessing as mp
+import argparse
+
 
 from network import Net_Simple
 from worker import Worker
 
 # NUM_PROCESS = mp.cpu_count()
-NUM_PROCESS = 4
+
 
 class A3CAgent:
     def __init__(self, gamma, env, lr, max_episode):
@@ -43,14 +45,26 @@ class A3CAgent:
 
 
 if __name__ == "__main__":
+
+    # Initialization
+    parser = argparse.ArgumentParser(description='A3C Policy Gradient')
+    parser.add_argument('-e', '--episode', type=int, help='number of episode you want to train', default=1000)
+    parser.add_argument('-g', '--gamma', type=float, help='discount coefficient', default = 0.95)
+    parser.add_argument('-l', '--lr', type=float, help='Learning rate', default=1e-4)
+    parser.add_argument('-p', '--process', type=int, help='number of process', default=4)
+    args = vars(parser.parse_args())
+
+    
+    gamma = args['gamma']
+    lr = args['lr']
+    max_episode = args['episode']
+    NUM_PROCESS = args['process']
+
     # env = gym.make("CartPole-v0")
     env = []
     for i in range(NUM_PROCESS):
         env.append(gym.make('CartPole-v0'))
     
-    gamma = 0.99
-    lr = 1e-3
-    max_episode = 1000
 
     agent = A3CAgent(gamma, env, lr, max_episode)
     agent.train()
