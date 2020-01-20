@@ -86,7 +86,7 @@ For reference only, mine is `python AC_CartPole.py -e 2000 --info ac_cart`.
 
 ## 3.3. A3C
 
-Asynchronous Advantage Actor-Critic
+Asynchronous Advantage Actor-Critic, the implementation is in folder a3c.
 
 ### 3.3.1. Implementation
 
@@ -104,18 +104,22 @@ Because there are multiple threads, each has its own update procedure. Thus no f
 
 * I have not encounted problems like stucking into local optimal point. I would account this for the game itself is easy.
 
-<!-- ## 3.4. A2C
+## 3.4. A2C
 
-The implementation is in "Actor-Critic".
+The implementation is in folder a2c.
+
+To start the training, the simplest way is to run `python A2C_CartPole.py`, remember go to the a3c folder.
+
+Type `python A2C_CartPole.py --help` to see other options of training.
+
+For reference only, mine is `python A3C_CartPole.py -e 5000 -l 0.0001`.
+
+### Result
+![A2C_result](./img/A2C_CART.png)
 
 ### 3.3.4. Discussion
 
-* According to the training result, the A3C and A2C is almost the same to each other, specially when number of process is set to a moderate number like 4 or 5. Probably it is why [openai](https://openai.com/blog/baselines-acktr-a2c/) used A2C as their baseline rather than A3C. 
-
-* The interpretation in [Lil'Log]((https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html)) is probably wrong as far as i think. Basically, the implementation of A2C given by [openai](https://github.com/openai/baselines/tree/master/baselines/a2c) shows no sign of using synchronized multiprocessing or any codes of coordinator. If i am wrong, please feel free to correct me.  -->
-
-## 3.4. A2C
-Sorry i did make a mistake. I will modify it RN.
+* While the result is not bad, but I would believe my implementation is kind of inefficient. The algorithms takes almost 2000 episodes to converge.  
 
 # 4. Reference
 [Reinforce Learning Book](http://incompleteideas.net/book/RLbook2018.pdf)
