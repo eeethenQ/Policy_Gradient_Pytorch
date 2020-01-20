@@ -106,9 +106,7 @@ Because there are multiple threads, each has its own update procedure. Thus no f
 
 ## 3.4. A2C
 
-The implementation is in folder a2c.
-
-To start the training, the simplest way is to run `python A2C_CartPole.py`, remember go to the a3c folder.
+The implementation is in folder a2c. To start the training, the simplest way is to run `python A2C_CartPole.py`
 
 Type `python A2C_CartPole.py --help` to see other options of training.
 
